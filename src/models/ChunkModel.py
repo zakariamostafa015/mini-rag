@@ -1,0 +1,45 @@
+from .BaseDataModel import BaseDataModel
+from .db_schemes.data_chunk import DataChunk
+from .enums.DataBaseEnum import DataBaseEnum
+from bson import ObjectId  #came with motor
+from pymongo import InsertOne
+
+class ChunkModel(BaseDataModel):
+    def __init__(self, db_client: object):
+            super().__init__(db_client)
+            self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNK_NAME.value]
+
+    async def create_chunk(self, chunk: DataChunk):
+        result = await self.collection.insert_one(chunk.dict(by_alias=True, exclude_unset=True))  # use by_alias=True to ensure the _id field is correctly handled)
+        chunk._id = result.inserted_id
+
+        return chunk
+
+    async def get_chunk_by_id(self, chunk_id: str):
+        record = await self.collection.find_one({
+            "_id": ObjectId(chunk_id)  # conver string to ObjectId for querying to save in mongo , and if we read from the mongo then we will get the ObjectId type and we can convert it to string when returning the response
+        })
+
+        if record is None:
+            return None
+        else:
+            return DataChunk(**record)
+
+    async def insert_many_chunks(self, chunks: list, batch_size: int = 100):
+
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i + batch_size]
+            operations = [
+                InsertOne(chunk.dict(by_alias=True, exclude_unset=True))
+                for chunk in batch
+            ]
+            await self.collection.bulk_write(operations)
+
+        return len(chunks)
+
+
+    async def delete_chunk_by_project_id(self, project_id: str):
+        result = await self.collection.delete_many({
+            "chunk_project_id": ObjectId(project_id)
+        })
+        return result.deleted_count

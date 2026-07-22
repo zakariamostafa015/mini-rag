@@ -45,8 +45,6 @@ class ProcessController(BaseController):
             chunk_overlap=overlap_size,
             length_function = len
         )
-        print(type(file_content))
-        print(file_content)
         
         file_content_texts = [
             rec.page_content

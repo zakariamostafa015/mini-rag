@@ -3,13 +3,13 @@ from typing import Optional
 from bson import ObjectId  #came with motor
 
 class Project(BaseModel):
-    _id: Optional[ObjectId] = None
+    id: Optional[ObjectId] = Field(None, alias="_id")
     project_id: str = Field(..., min_length=1)
 
     @field_validator("project_id")
     def validate_project_id(cls, value):
-        if not value.isalpha() or len(value) < 1:
-            raise ValueError("project_id must be a non-empty string containing only alphabetic characters.")
+        if not value.isalnum():
+            raise ValueError("project_id must be a non-empty string containing only alphanumeric characters.")
         return value
     
 
