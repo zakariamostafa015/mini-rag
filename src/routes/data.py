@@ -22,7 +22,7 @@ data_router = APIRouter(
 async def upload_data(request: Request, project_id: str, file: UploadFile,
                       app_settings: Settings = Depends(get_settings)):
 
-    project_model = ProjectModel(
+    project_model = await ProjectModel.create_instance(
         db_client=request.app.state.mongodb_db
     )
 
@@ -80,10 +80,10 @@ async def proccess_data(request: Request, project_id: str, process_request: Proc
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
-    chunk_model = ChunkModel(
+    chunk_model = await ChunkModel.create_instance(
         db_client=request.app.state.mongodb_db
     )
-    project_model = ProjectModel(
+    project_model = await ProjectModel.create_instance(
                 db_client=request.app.state.mongodb_db
             )
     project = await project_model.get_project_or_create_one(project_id=project_id)  # retrive the project or create a new one if it doesn't exist

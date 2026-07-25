@@ -12,6 +12,15 @@ class Project(BaseModel):
             raise ValueError("project_id must be a non-empty string containing only alphanumeric characters.")
         return value
     
-
     class Config:
         arbitrary_types_allowed = True
+
+    @classmethod
+    def get_index(cls):
+        return [
+            {
+                "key": [("project_id", 1)],
+                "name": "project_id_index_1",
+                "unique": True
+            }
+        ]
