@@ -8,8 +8,12 @@ services:
       - "27000:27017"
       
     volumes:
-      - ./mongodb:/data/db
-    command: mongod --dbpath /data/db --directoryperdb
+      - mongodata:/data/db
+
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+
     networks:
       - backend
       
@@ -17,3 +21,6 @@ services:
 
 networks:
   backend:
+
+volumes:
+  mongodata:
