@@ -16,7 +16,7 @@ class Project(BaseModel):
         arbitrary_types_allowed = True
 
     @classmethod
-    def get_index(cls):
+    def get_indexes(cls):
         return [
             {
                 "key": [("project_id", 1)],

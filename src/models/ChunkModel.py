@@ -20,7 +20,7 @@ class ChunkModel(BaseDataModel):
         all_collections = await self.db_client.list_collection_names()
         if DataBaseEnum.COLLECTION_CHUNK_NAME.value not in all_collections:
             self.collection = await self.db_client.create_collection(DataBaseEnum.COLLECTION_CHUNK_NAME.value)
-            indexes = DataChunk.get_index()
+            indexes = DataChunk.get_indexes()
             for index in indexes:
                 await self.collection.create_index(
                     index["key"],

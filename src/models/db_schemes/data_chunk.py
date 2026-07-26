@@ -13,7 +13,7 @@ class DataChunk(BaseModel):
         arbitrary_types_allowed = True
 
     @classmethod
-    def get_index(cls):
+    def get_indexes(cls):
         return [
             {
                 "key": [("chunk_project_id", 1)],
