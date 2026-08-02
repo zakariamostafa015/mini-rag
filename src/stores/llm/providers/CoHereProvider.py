@@ -1,6 +1,6 @@
-from ...LLMInterface import LLMInterface
-from ...LLMEnums import CoHereEnums
-from ...LLMEnums import DocumentTypeEnum
+from ..LLMInterface import LLMInterface
+from ..LLMEnums import CoHereEnums
+from ..LLMEnums import DocumentTypeEnum
 import cohere
 import logging
 
@@ -31,7 +31,7 @@ class CoHereProvider(LLMInterface):
         self.generation_model_id = model_id
     
     def set_embedding_model(self, model_id: str, embedding_size: int):
-        self.generation_model_id = model_id
+        self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
     def process_text(self, text: str):
