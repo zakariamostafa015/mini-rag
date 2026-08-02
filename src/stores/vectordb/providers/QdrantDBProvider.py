@@ -27,7 +27,8 @@ class QdrantDBProvider(VectorDBInterface):
 
     def disconnect(self):
         # Qdrant client does not require explicit disconnection
-        raise NotImplementedError("Qdrant client does not require explicit disconnection.")
+        # raise NotImplementedError("Qdrant client does not require explicit disconnection.")
+        return None
 
     def is_collection_exists(self, collection_name: str) -> bool:
         return self.client.collection_exists(collection_name=collection_name)
