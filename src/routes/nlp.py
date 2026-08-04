@@ -103,7 +103,9 @@ async def get_project_index_info( request: Request, project_id: str):
     nlp_controller = NLPController(
         vector_client=request.app.state.vector_db_client,
         generation_client=request.app.state.llm_generation_client,
-        embedding_client=request.app.state.llm_embedding_client
+        embedding_client=request.app.state.llm_embedding_client,
+        template_parser=request.app.state.template_parser
+
     )
 
     collection_info = nlp_controller.get_vector_db_collection_info(project=project)
