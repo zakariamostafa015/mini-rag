@@ -30,7 +30,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
                       app_settings: Settings = Depends(get_settings)):
 
     project_model = await ProjectModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
 
     project = await project_model.get_project_or_create_one(project_id=project_id)
@@ -71,7 +71,7 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
 
     # store the assets into the database
     asset_model = await AssetModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
 
     asset_resource = Asset(
@@ -101,13 +101,13 @@ async def proccess_data(request: Request, project_id: str, process_request: Proc
     do_reset = process_request.do_reset
 
     chunk_model = await ChunkModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
     project_model = await ProjectModel.create_instance(
-                db_client=request.app.state.mongodb_db
+                db_client=request.app.state.db_client
             )
     asset_model = await AssetModel.create_instance(
-            db_client=request.app.state.mongodb_db
+            db_client=request.app.state.db_client
         )
     
     project = await project_model.get_project_or_create_one(project_id=project_id)  # retrive the project or create a new one if it doesn't exist
