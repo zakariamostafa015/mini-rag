@@ -12,12 +12,13 @@ class Asset(SqlAlchemyBase):
     asset_uuid = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
     asset_type = Column(String, nullable=False)
     asset_name = Column(String, nullable=False)
-    asset_size = Column(String, nullable=False)
-    asset_config = Column(JSONB, nullable=False)
+    asset_size = Column(Integer, nullable=False)
+    asset_config = Column(JSONB, nullable=True)
 
     asset_project_id = Column(Integer, ForeignKey("projects.project_id"), nullable=False)
 
     project = relationship("Project", back_populates="assets")
+    chunks = relationship("DataChunk", back_populates="asset")
 
 
     __table_args__ = (
