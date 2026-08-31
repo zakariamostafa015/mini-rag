@@ -229,26 +229,14 @@ class PGVectorProvider(VectorDBInterface):
             async with session.begin():
 
                 create_sql = sql_text(
-                    f"""
-                    CREATE TABLE {collection_name} (
-
-                        {PgVectorTableSchemeEnums.ID.value}
-                        BIGSERIAL PRIMARY KEY,
-
-                        {PgVectorTableSchemeEnums.TEXT.value}
-                        TEXT,
-
-                        {PgVectorTableSchemeEnums.VECTOR.value}
-                        VECTOR({embedding_size}),
-
-                        {PgVectorTableSchemeEnums.METADATA.value}
-                        JSONB DEFAULT '{{}}',
-
-                        {PgVectorTableSchemeEnums.CHUNK_ID.value}
-                        INTEGER
-
-                    )
-                    """
+                    f'CREATE TABLE {collection_name} ('
+                        f'{PgVectorTableSchemeEnums.ID.value} bigserial PRIMARY KEY,'
+                        f'{PgVectorTableSchemeEnums.TEXT.value} text, '
+                        f'{PgVectorTableSchemeEnums.VECTOR.value} vector({embedding_size}), '
+                        f'{PgVectorTableSchemeEnums.METADATA.value} jsonb DEFAULT \'{{}}\', '
+                        f'{PgVectorTableSchemeEnums.CHUNK_ID.value} integer, '
+                        f'FOREIGN KEY ({PgVectorTableSchemeEnums.CHUNK_ID.value}) REFERENCES chunks(chunk_id)'
+                    ')'
                 )
 
                 await session.execute(create_sql)
