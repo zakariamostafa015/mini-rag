@@ -6,6 +6,16 @@ This is minimal implementation of the RAG model for question asnwering
 
 - Pythin 3.8 or later
 
+## Install Dependencies
+
+```bash
+$ sudo apt update
+$ sudo apt install libqp-dev gcc python3-dev
+```
+
+
+- Pythin 3.8 or later
+
 ### Install Python using MiniConda
 
 1) Download and install MiniConda from [here(https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh)]

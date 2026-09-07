@@ -5,7 +5,7 @@ import aiofiles
 import logging
 
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProjectController, ProcessController
+from controllers import DataController, ProjectController, ProcessController, NLPController
 
 from models.enums.AssetTypeEnum import AssetTypeEnum
 
@@ -26,11 +26,11 @@ data_router = APIRouter(
 )
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request: Request, project_id: str, file: UploadFile,
+async def upload_data(request: Request, project_id: int, file: UploadFile,
                       app_settings: Settings = Depends(get_settings)):
 
     project_model = await ProjectModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
 
     project = await project_model.get_project_or_create_one(project_id=project_id)
@@ -71,11 +71,11 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
 
     # store the assets into the database
     asset_model = await AssetModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
 
     asset_resource = Asset(
-        asset_project_id=project.id,
+        asset_project_id=project.project_id,
         asset_type= AssetTypeEnum.FILE.value,
         asset_name=file_id,
         asset_size=os.path.getsize(file_path)
@@ -87,35 +87,42 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
             status_code=status.HTTP_201_CREATED,
             content={
                 "signal": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
-                "file_id": str(asset_record.id),
+                "file_id": str(asset_record.asset_id),
                 # "project_id": str(project._id)
             }
         )
 
 
 @data_router.post("/process/{project_id}")
-async def proccess_data(request: Request, project_id: str, process_request: ProcessRequest):
+async def proccess_data(request: Request, project_id: int, process_request: ProcessRequest):
 
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
     chunk_model = await ChunkModel.create_instance(
-        db_client=request.app.state.mongodb_db
+        db_client=request.app.state.db_client
     )
     project_model = await ProjectModel.create_instance(
-                db_client=request.app.state.mongodb_db
+                db_client=request.app.state.db_client
             )
     asset_model = await AssetModel.create_instance(
-            db_client=request.app.state.mongodb_db
+            db_client=request.app.state.db_client
         )
     
     project = await project_model.get_project_or_create_one(project_id=project_id)  # retrive the project or create a new one if it doesn't exist
 
+    nlp_controller = NLPController(
+        vector_client=request.app.state.vector_db_client,
+        generation_client = request.app.state.llm_generation_client,
+        embedding_client = request.app.state.llm_embedding_client,
+        template_parser = request.app.state.template_parser,
+    )
+
     project_file_ids = {}
     if process_request.file_id:
         asset_record = await asset_model.get_asset_record(
-            asset_project_id=project.id,
+            asset_project_id=project.project_id,
             asset_name=process_request.file_id
         )
 
@@ -128,17 +135,17 @@ async def proccess_data(request: Request, project_id: str, process_request: Proc
             )
 
         project_file_ids = {
-             asset_record.id: asset_record.asset_name
+             asset_record.asset_id: asset_record.asset_name
         }
     else:
 
         project_file = await asset_model.get_all_project_assets(
-            asset_project_id=project.id,
+            asset_project_id=project.project_id,
             asset_type=process_request.asset_type.value
         )
 
         project_file_ids = {
-            record.id: record.asset_name
+            record.asset_id: record.asset_name
             for record in project_file
         }
 
@@ -156,7 +163,13 @@ async def proccess_data(request: Request, project_id: str, process_request: Proc
     no_of_files_processed = 0
 
     if do_reset == 1:
-                deleted_count = await chunk_model.delete_chunk_by_project_id(project_id=str(project.id))
+                # delete associated vectors collection
+                collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
+
+                # delete associated cunks 
+                _ = await request.app.state.vector_db_client.delete_collection(collection_name=collection_name)
+
+                deleted_count = await chunk_model.delete_chunk_by_project_id(project_id=project.project_id)
                 logger.info(f"Deleted {deleted_count} chunks for project_id: {project_id} due to reset request.")
 
     
@@ -187,7 +200,7 @@ async def proccess_data(request: Request, project_id: str, process_request: Proc
                 chunk_text=chunk.page_content,
                 chunk_metadata=chunk.metadata,
                 chunk_order=i + 1,  # start from 1
-                chunk_project_id=project.id,
+                chunk_project_id=project.project_id,
                 chunk_asset_id = asset_id
             )
             for i, chunk in enumerate(file_chunks)
